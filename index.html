@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bookmark Studio</title>
+  <meta name="description" content="PDF를 책처럼 읽는 웹 리더 — 서재, 두 쪽 펼침, 책갈피, 본문 검색">
+  <meta name="theme-color" content="#fbfaf8">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c4622d'/%3E%3Cpath d='M10 18l20 4v28l-20-4zM34 22l20-4v28l-20 4z' fill='%23fffaf2'/%3E%3Cpath d='M40 20.5l6-1.2v17l-3-3-3 3z' fill='%23782814'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="light" data-view="spread" class="is-home">
+
+<header class="topbar">
+  <div class="tb-group">
+    <button class="icon-btn" id="btnHome" data-icon="home" data-tip="서재 (Ctrl+H)"></button>
+    <button class="icon-btn" id="btnSidebar" data-icon="sidebar" data-tip="사이드바 (S)"></button>
+    <button class="icon-btn" id="btnOpen" data-icon="filePlus" data-tip="PDF 열기 (Ctrl+O)"></button>
+    <span class="divider"></span>
+  </div>
+
+  <div class="tb-title" id="titleArea">
+    <div class="brand"><span class="brand-mark" data-icon="ribbon"></span><b>Bookmark Studio</b><span class="sub" id="brandSub"></span></div>
+    <div class="doc-title"><b id="docTitle"></b><span class="sub" id="docSection"></span></div>
+    <div class="search-box" id="searchBox">
+      <span class="search-ic" data-icon="search"></span>
+      <input id="searchInput" type="search" placeholder="본문 검색" autocomplete="off" spellcheck="false">
+      <span class="search-count" id="searchCount"></span>
+      <button class="mini-btn text" id="btnCase" data-tip="대소문자 구분">Aa</button>
+      <button class="mini-btn" id="btnHitPrev" data-icon="chevronUp" data-tip="이전 결과 (Shift+Enter)"></button>
+      <button class="mini-btn" id="btnHitNext" data-icon="chevronDown" data-tip="다음 결과 (Enter, F3)"></button>
+      <button class="mini-btn" id="btnSearchClose" data-icon="x" data-tip="검색 닫기 (Esc)"></button>
+    </div>
+  </div>
+
+  <div class="tb-group reader-only">
+    <button class="icon-btn" id="btnSearch" data-icon="search" data-tip="본문 검색 (Ctrl+F)"></button>
+    <button class="icon-btn" id="btnBookmark" data-icon="ribbon" data-tip="이 페이지에 책갈피 (Ctrl+B)"></button>
+    <span class="divider"></span>
+    <div class="segmented" id="viewSeg">
+      <button data-view="single" data-icon="viewSingle" data-tip="한 쪽 보기 (1)"></button>
+      <button data-view="spread" data-icon="viewSpread" data-tip="두 쪽 · 책 펼침 (2)"></button>
+      <button data-view="scroll" data-icon="viewScroll" data-tip="연속 스크롤 (3)"></button>
+    </div>
+    <span class="divider hide-sm"></span>
+    <button class="icon-btn hide-sm" id="btnZoomOut" data-icon="zoomOut" data-tip="축소 (Ctrl −)"></button>
+    <button class="zoom-label hide-sm" id="btnZoomFit" data-tip="클릭하면 화면에 맞춤 (Ctrl+0)">맞춤</button>
+    <button class="icon-btn hide-sm" id="btnZoomIn" data-icon="zoomIn" data-tip="확대 (Ctrl +)"></button>
+    <span class="divider"></span>
+  </div>
+
+  <div class="tb-group">
+    <button class="icon-btn" id="btnTheme" data-icon="sun" data-tip="테마 (T)"></button>
+    <button class="icon-btn" id="btnMore" data-icon="more" data-tip="보기 설정 및 더보기"></button>
+    <button class="icon-btn hide-sm" id="btnFullscreen" data-icon="maximize" data-tip="전체 화면 (F11)"></button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar" id="sidebar">
+    <nav class="tabs" id="tabs">
+      <button data-tab="library">서재</button>
+      <button data-tab="toc">목차</button>
+      <button data-tab="thumbs">페이지</button>
+      <button data-tab="marks">책갈피</button>
+      <button data-tab="search">검색</button>
+    </nav>
+    <div class="panel" id="panel-library"></div>
+    <div class="panel" id="panel-toc"></div>
+    <div class="panel" id="panel-thumbs"></div>
+    <div class="panel" id="panel-marks"></div>
+    <div class="panel" id="panel-search"></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <section class="stage">
+    <div class="shelf" id="shelf"></div>
+    <div class="viewer" id="viewer" tabindex="-1">
+      <div class="pages" id="pages"></div>
+    </div>
+    <button class="edge-hint left" id="edgePrev" data-icon="chevronLeft" aria-label="이전 페이지"></button>
+    <button class="edge-hint right" id="edgeNext" data-icon="chevronRight" aria-label="다음 페이지"></button>
+    <div class="loading" id="loading"><span class="spinner"></span><span id="loadingText">불러오는 중…</span></div>
+  </section>
+</div>
+
+<footer class="bottombar reader-only">
+  <button class="icon-btn small" id="btnBack" data-icon="arrowLeft" data-tip="이전 위치로 (Alt+←)"></button>
+  <button class="icon-btn small" id="btnPrev" data-icon="chevronLeft" data-tip="이전 페이지 (←)"></button>
+  <button class="icon-btn small" id="btnNext" data-icon="chevronRight" data-tip="다음 페이지 (→)"></button>
+  <button class="page-label" id="btnGoto" data-tip="페이지로 이동 (Ctrl+G)">1 / 1</button>
+  <div class="slider" id="slider">
+    <div class="track"><div class="fill" id="sliderFill"></div></div>
+    <div class="ticks" id="sliderTicks"></div>
+    <div class="thumb" id="sliderThumb"></div>
+    <div class="bubble" id="sliderBubble"><b></b><span></span></div>
+  </div>
+  <span class="read-info" id="readInfo"></span>
+</footer>
+
+<div class="toast" id="toast"></div>
+<div class="tooltip" id="tooltip"></div>
+<div class="menu" id="menu" role="menu"></div>
+<div class="modal-wrap" id="modalWrap"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="drop-overlay" id="dropOverlay"><div><span data-icon="filePlus"></span><b>PDF를 놓아 서재에 추가</b><span>여러 파일을 한꺼번에 놓을 수 있습니다</span></div></div>
+<input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/store.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
